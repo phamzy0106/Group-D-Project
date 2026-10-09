@@ -1,0 +1,11 @@
+summary(ashford_matches)
+summary(league_players)
+
+mintra <- lm(minutes_played ~ training_load, data = league_players)
+summary(mintra)
+str(mintra)
+
+minpre <- lm(minutes_played ~ prev_injuries, data = league_players)       
+minage <- lm(minutes_played ~ age, data = league_players) 
+minbmi <- lm(minutes_played ~ bmi, data = league_players) 
+mininj <- lm(minutes_played ~ injured, data = league_players)
