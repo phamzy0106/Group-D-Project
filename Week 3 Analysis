@@ -4,5 +4,7 @@
     #minutes_played(numerical),prev_injuries(counted),injured(binary)
 
 #we investigated minutes_played as the response variable and the explanatory variables are the: age, position, training_load, prev_injuries and bmi, so a suitable model would be normal linear regression.
+#we also investigated the injured binary variable, binomial logistic regression would be suitable for explanatory variables: training load, position, prev injuries, bmi and age
+#the choice of statstical model depends on the type of response variable and assumptions of the model. normal linear regression is appropriate for suitable continuous outcomes and binomial logistic regression for binary outcomes.
 
 
