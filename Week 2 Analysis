@@ -10,3 +10,22 @@ str(league_players)
 #players ages:
 hist(league_players$age,main  = "distribution of player ages", xlab = "age")
 
+#minutes played:
+hist(league_players$minutes_played, main = "distribution of minutes played", xlab = "minutes played")
+#most players play an average between 2000-3000 minutes so far in the season
+
+#minutes played by position:
+boxplot(minutes_played ~ position, data = league_players, main = "minutes played by position", xlab = "position", ylab = "minutes played")
+#we see the GK has the most minutes played, we used boxplots to model the positions easier since it is non-numerical
+
+#age and minutes played
+plot(league_players$age, league_players$minutes_played, main = "age and minutes", xlab = "age", ylab = "minutes played")
+#no correlation between the age and the minutes played, equally inclusive
+
+#goals scored by ashford
+hist(ashford_matches$goals_scored, main = "goals scored per match", xlab = "goals scored") 
+
+#fitted model
+fitted_model <- lm(minutes_played ~ age + position + training_load + prev_injuries + bmi, data = league_players)
+summary(fitted_model)
+# the coefficients suggest that the fwd and mid position show drastic drops in minutes compared to the GK position. What really surprised us is that the higher the bmi, the more minutes they play.
