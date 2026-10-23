@@ -12,7 +12,7 @@ injury_rates <- tapply(league_players$injured, league_players$position, mean, na
 barplot(injury_rates, main = "injury rates by position", xlab = "playing position", ylab = "injury rates", ylim = c(0,1))
 #when we first tested the plots were inaccurate so we had to use limits
 
-#fiiting the model
+#fitting the model
 injury_model <- glm(injured ~ age + position + training_load + prev_injuries + bmi, data = league_players, family = binomial(link = "logit"))
 summary(injury_model)
 
