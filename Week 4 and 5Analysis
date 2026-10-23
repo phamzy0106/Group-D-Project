@@ -18,3 +18,9 @@ summary(injury_model)
 
 #what we interpreted is injuries depends on the training load and previous injuries, perhaps due to exhaustion or not on full recovery, the more bmi the less chance of injury
 #in terms of position, the gk position has more chance of injury compared to outfield players, which is weird given that outfield players have more action in the pitch.
+
+residuals_injury <- residuals(injury_model, type = "deviance")
+probabilities <- fitted(injury_model)
+plot(probabilities, residuals_injury, xlab = "predicted probability of injury", ylab = "deviance residuals", main = "residuals vs predicted probabilities")
+abline(h = 0, lty = 2)
+hist(residuals_injury, main = "dist. of deviance residuals", xlab = "deviance residuals")
