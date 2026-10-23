@@ -1,0 +1,20 @@
+#best binom regression model would contain injured
+head(league_players)
+str(league_players)
+summary(league_players)
+table(league_players$injured)
+table(league_players$position, league_players$injured)
+
+#we searched the web/surfed ai to find a function to get the rates of injury by position
+injury_rates <- tapply(league_players$injured, league_players$position, mean, na.rm = TRUE)
+
+#barplot:
+barplot(injury_rates, main = "injury rates by position", xlab = "playing position", ylab = "injury rates", ylim = c(0,1))
+#when we first tested the plots were inaccurate so we had to use limits
+
+#fiiting the model
+injury_model <- glm(injured ~ age + position + training_load + prev_injuries + bmi, data = league_players, family = binomial(link = "logit"))
+summary(injury_model)
+
+#what we interpreted is injuries depends on the training load and previous injuries, perhaps due to exhaustion or not on full recovery, the more bmi the less chance of injury
+#in terms of position, the gk position has more chance of injury compared to outfield players, which is weird given that outfield players have more action in the pitch.
