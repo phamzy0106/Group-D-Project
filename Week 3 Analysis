@@ -1,5 +1,8 @@
-#Variable 'minutes_played' is  a continuous variable: it is suitable for linear regression and is associated with the playing time
-#Variable 'injured' is a binary variable: it is suitable for the binomial logistic regression and is associated with the injury factor
-#Variable 'goals_scored' is a counted outcome, so a suitable model would be poisson regression
+#possible explanatory variables: 
+    #team(categorical),position(categorical),age(numerical),training_load(ordinal),bmi(numerical)
+#possible responses:
+    #minutes_played(numerical),prev_injuries(counted),injured(binary)
+
+#we investigated minutes_played as the response variable and the explanatory variables are the: age, position, training_load, prev_injuries and bmi, so a suitable model would be normal linear regression.
 
 
