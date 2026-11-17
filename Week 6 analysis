@@ -1,1 +1,249 @@
+# WEEK 6: POISSON REGRESSION FOR GOALS SCORED
+# Source: Group Project Data Brief, page 2.
 
+# Question:
+# How are home/away status and opponent rank associated
+# with the number of goals Ashford scores per match?
+
+# 1. Load the match data.
+if (exists("ashford_matches") &&
+    is.data.frame(ashford_matches)) {
+
+  matches_week6 <- ashford_matches
+
+} else {
+
+  possible_paths <- c(
+    "data/ashford_matches.csv",
+    "Data/ashford_matches.csv",
+    "ashford_matches.csv",
+    "../data/ashford_matches.csv",
+    "../Data/ashford_matches.csv",
+    "../ashford_matches.csv"
+  )
+
+  available_paths <- possible_paths[file.exists(possible_paths)]
+
+  if (!length(available_paths)) {
+    stop("Load ashford_matches.csv as ashford_matches, then run again.")
+  }
+
+  matches_week6 <- read.csv(available_paths[1])
+}
+
+# Check that the required variables and valid counts are present.
+stopifnot(
+  all(c("goals_scored", "home_away", "opponent_rank") %in%
+        names(matches_week6)),
+  !anyNA(matches_week6[
+    c("goals_scored", "home_away", "opponent_rank")
+  ]),
+  all(matches_week6$goals_scored >= 0),
+  all(matches_week6$goals_scored ==
+        floor(matches_week6$goals_scored)),
+  all(matches_week6$home_away %in% c("Home", "Away"))
+)
+
+# Set Away as the reference category.
+matches_week6$home_away <- factor(
+  matches_week6$home_away,
+  levels = c("Away", "Home")
+)
+
+# 2. Explore the data.
+print(summary(matches_week6))
+
+print(tapply(
+  matches_week6$goals_scored,
+  matches_week6$home_away,
+  mean
+))
+
+# 3. Fit candidate models.
+# Goals scored are non-negative integer counts.
+# A Poisson model with a log link gives positive fitted means.
+# Each observation represents one match; no varying-exposure
+# offset is included.
+
+goals_null <- glm(
+  goals_scored ~ 1,
+  family = poisson(link = "log"),
+  data = matches_week6
+)
+
+goals_home <- update(
+  goals_null, . ~ . + home_away
+)
+
+goals_rank <- update(
+  goals_null, . ~ . + opponent_rank
+)
+
+goals_model <- update(
+  goals_null, . ~ . + home_away + opponent_rank
+)
+
+goals_interaction <- update(
+  goals_model, . ~ . + home_away:opponent_rank
+)
+
+goals_quadratic <- update(
+  goals_model, . ~ . + I(opponent_rank^2)
+)
+
+# 4. Compare models fitted to the same observations.
+# Lower AIC is preferred among these candidates.
+
+print(AIC(
+  goals_null,
+  goals_home,
+  goals_rank,
+  goals_model,
+  goals_interaction,
+  goals_quadratic
+))
+
+# Assess removing each predictor from the additive model.
+print(drop1(goals_model, test = "Chisq"))
+
+# Assess adding an interaction or quadratic rank term.
+print(anova(
+  goals_model, goals_interaction,
+  test = "Chisq"
+))
+
+print(anova(
+  goals_model, goals_quadratic,
+  test = "Chisq"
+))
+
+print(summary(goals_model))
+
+# The additive model has AIC approximately 133.43.
+# Adding an interaction increases AIC to approximately 135.07.
+# Adding a quadratic rank term reduces AIC to approximately 131.98.
+#
+# The quadratic model's AIC advantage is small (approximately 1.45).
+# Retain it for discussion alongside the simpler additive model.
+# The additive model is used below as a working analysis,
+# rather than being declared uniquely best.
+
+# 5. Calculate ratios of expected goals and approximate
+# 95% Wald confidence intervals.
+
+mean_ratios_week6 <- function(model) {
+  exp(cbind(
+    ratio = coef(model),
+    confint.default(model)
+  ))
+}
+
+print(mean_ratios_week6(goals_model))
+
+# Holding rank fixed:
+# Home/away expected-goals ratio = approximately 2.00.
+# 95% CI: approximately 1.17 to 3.42.
+#
+# Holding venue fixed:
+# Ratio per one-place increase in numerical rank = approximately 1.056.
+# 95% CI: approximately 1.016 to 1.097.
+#
+# Higher rank numbers mean lower final league positions.
+# These are associations, not causal effects or win probabilities.
+# The intervals condition on the chosen model and do not account
+# for model-selection uncertainty.
+
+# 6. Check conditional dispersion.
+
+pearson_X2_week6 <- sum(
+  residuals(goals_model, type = "pearson")^2
+)
+
+dispersion_week6 <- pearson_X2_week6 /
+  df.residual(goals_model)
+
+print(c(
+  residual_deviance = deviance(goals_model),
+  residual_df = df.residual(goals_model),
+  Pearson_X2 = pearson_X2_week6,
+  dispersion = dispersion_week6,
+  observed_zeros = sum(matches_week6$goals_scored == 0),
+  expected_zeros = sum(exp(-fitted(goals_model)))
+))
+
+# Estimated dispersion is approximately 0.99.
+# This does not indicate substantial conditional overdispersion.
+# It does not prove that the model fits in every respect.
+# Comparing the raw response variance with its raw mean alone
+# is insufficient to assess conditional dispersion.
+
+# 7. Examine residuals and influential observations.
+# Poisson residuals are not required to be normally distributed.
+
+old_par_week6 <- par(mfrow = c(1, 2))
+
+plot(
+  fitted(goals_model),
+  residuals(goals_model, type = "deviance"),
+  pch = 19,
+  xlab = "Fitted mean goals",
+  ylab = "Deviance residual",
+  main = "Count-model residuals"
+)
+
+abline(h = 0, lty = 2)
+
+plot(
+  cooks.distance(goals_model),
+  type = "h",
+  xlab = "CSV row (not time order)",
+  ylab = "Cook's distance",
+  main = "Influential matches"
+)
+
+par(old_par_week6)
+
+# 8. Investigate the most influential observation.
+
+influential_match_week6 <- which.max(
+  cooks.distance(goals_model)
+)
+
+print(matches_week6[influential_match_week6, ])
+
+# Refit without this observation as a sensitivity check only.
+# Keep the observation in the main analysis.
+
+goals_sensitivity <- glm(
+  goals_scored ~ home_away + opponent_rank,
+  family = poisson(link = "log"),
+  data = matches_week6[-influential_match_week6, ]
+)
+
+print(mean_ratios_week6(goals_sensitivity))
+
+# Row 8 is the eight-goal home match against the rank-24 opponent.
+#
+# Omitting this match gives:
+# Home/away ratio approximately 1.71, CI 0.97 to 2.98.
+# Rank ratio approximately 1.034, CI 0.993 to 1.077.
+#
+# Both intervals include 1, showing that evidence for the
+# associations is sensitive to this influential fixture.
+#
+# An unusual observation should not automatically be deleted.
+# AIC should not be compared between fits using different datasets.
+
+# CONCLUSION:
+# The initial additive model suggests higher expected goals
+# at home and against lower-ranked opponents.
+# However, these findings weaken when one influential match
+# is omitted as a sensitivity check.
+#
+# LIMITATIONS:
+# There are only 46 matches.
+# Repeated opponents may introduce dependence.
+# The primary model assumes conditional independence.
+# Numeric rank imposes a particular functional form.
+# Final rank is retrospective and does not establish causation
+# or provide a clean pre-season predictor.
