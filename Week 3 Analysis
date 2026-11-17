@@ -1,10 +1,62 @@
-#possible explanatory variables: 
-    #team(categorical),position(categorical),age(numerical),training_load(ordinal),bmi(numerical)
-#possible responses:
-    #minutes_played(numerical),prev_injuries(counted),injured(binary)
+# WEEK 3: RESPONSE VARIABLES AND CANDIDATE MODELS
+# Source: Group Project Data Brief, page 2.
 
-#we investigated minutes_played as the response variable and the explanatory variables are the: age, position, training_load, prev_injuries and bmi, so a suitable model would be normal linear regression.
-#we also investigated the injured binary variable, binomial logistic regression would be suitable for explanatory variables: training load, position, prev injuries, bmi and age
-#the choice of statstical model depends on the type of response variable and assumptions of the model. normal linear regression is appropriate for suitable continuous outcomes and binomial logistic regression for binary outcomes.
+# Player variables:
+# team, position: categorical
+# age, bmi, minutes_played: numerical
+# training_load: ordinal
+# prev_injuries: count
+# injured: binary
 
+# Match variables:
+# home_away: categorical
+# goals_scored, goals_conceded: counts
+# opponent_rank: ordinal
 
+# Proposed questions:
+# 1. How are player characteristics associated with playing time?
+# 2. How are player characteristics associated with injury probability?
+# 3. How are venue and opponent rank associated with goals scored?
+
+week3_plan <- data.frame(
+  response = c(
+    "minutes_played",
+    "injured",
+    "goals_scored"
+  ),
+  outcome_type = c(
+    "Numerical playing time",
+    "Binary (0/1)",
+    "Non-negative count"
+  ),
+  explanatory_variables = c(
+    "age + position + training_load + prev_injuries + bmi",
+    "age + position + training_load + prev_injuries + bmi",
+    "home_away + opponent_rank"
+  ),
+  candidate_model = c(
+    "Normal linear regression",
+    "Binomial logistic regression",
+    "Poisson regression"
+  ),
+  stringsAsFactors = FALSE
+)
+
+print(week3_plan, row.names = FALSE)
+
+# These are proposed analyses, not fitted results.
+# Model suitability requires checking assumptions.
+
+# A variable's role depends on the question:
+# prev_injuries can explain current-season injury even though
+# it could itself be a response in another analysis.
+
+# A numerical response does not automatically justify normal
+# regression. Residuals, variance and functional form need checking.
+
+# Treating training_load numerically assumes a constant change
+# per level on the model's linear predictor. Using it as a factor
+# would allow separate effects for each category.
+
+# Treating opponent_rank numerically similarly imposes a
+# constant change in log expected goals per rank position.
